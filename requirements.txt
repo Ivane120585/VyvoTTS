@@ -1,0 +1,12 @@
+transformers 
+unsloth
+datasets==3.4.1
+wandb 
+trl
+accelerate
+snac
+soundfile
+librosa
+torchaudio
+kernels
+liger_kernel
