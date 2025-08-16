@@ -1,6 +1,6 @@
 <div align="center">
 <h2>
-    **VyvoTTS: LLM-Based Text-to-Speech Training Framework 🚀**
+    VyvoTTS: LLM-Based Text-to-Speech Training Framework 🚀
 </h2>
 <div>
     <div align="center">
