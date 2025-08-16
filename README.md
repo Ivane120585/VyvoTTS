@@ -1,4 +1,23 @@
-# VyvoTTS
+<div align="center">
+<h2>
+    VyvoTTS: Advanced Text-to-Speech Training Framework 🚀
+</h2>
+<div>
+    <img width="200" alt="VyvoTTS Logo" src="assets/vyvotts.png">
+</div>
+
+<div>
+    <a href="https://github.com/Vyvo-Labs/VyvoTTS" target="_blank">
+        <img src="https://img.shields.io/github/stars/Vyvo-Labs/VyvoTTS?style=social" alt="GitHub stars">
+    </a>
+    <a href="https://github.com/Vyvo-Labs/VyvoTTS/blob/main/LICENSE" target="_blank">
+        <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License">
+    </a>
+    <a href="https://python.org" target="_blank">
+        <img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="Python 3.8+">
+    </a>
+</div>
+</div>
 
 This library was developed by the VyvoTTS team. A Text-to-Speech (TTS) training and inference framework built on top of the LFM2 model.
 
