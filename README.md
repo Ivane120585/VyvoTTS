@@ -69,7 +69,18 @@ accelerate launch --config_file vyvotts/configs/accelerate_pretrain.yaml vyvotts
 ### Inference
 
 ```python
+from vyvotts.inference.vllm_inference import text_to_speech as vllm_tts
+from vyvotts.inference.unsloth_inference import text_to_speech as unsloth_tts
+from vyvotts.inference.transformers_hqq_inference import text_to_speech as hqq_tts
 
+# vLLM inference (fastest)
+audio = vllm_tts("Hello world", voice="zoe")
+
+# Unsloth inference (memory efficient)
+audio = unsloth_tts("Hello world", voice="zoe", output_path="output.wav")
+
+# HQQ quantized inference (4-bit)
+audio = hqq_tts("Hello world", voice="zoe")
 ```
 
 ## 👨‍🍳 Roadmap
