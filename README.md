@@ -3,7 +3,7 @@
     VyvoTTS: Advanced Text-to-Speech Training Framework 🚀
 </h2>
 <div>
-    <img width="200" alt="VyvoTTS Logo" src="assets/vyvotts.png">
+    <img width="200" alt="VyvoTTS Logo" src="assets/logo.png">
 </div>
 
 <div>
