@@ -1,0 +1,17 @@
+# CHANGE THIS TO YOUR OWN DATASET
+TTS_dataset: "kadirnar/elise-lfm-tokenized"
+
+model_name: "Vyvo/VyvoTTS-v0-LFM2-350M-Emilia-EN"
+
+# Training Args
+epochs: 1
+batch_size: 1
+number_processes: 1
+pad_token: 64407
+save_steps: 5000
+learning_rate: 5.0e-5
+
+# Naming and paths
+save_folder: "checkpoints"
+project_name: "tuning-orpheus"
+run_name: "5e5-0"

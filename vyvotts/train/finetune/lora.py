@@ -1,4 +1,5 @@
 from datasets import load_dataset
+from peft import LoraConfig, get_peft_model
 from transformers import AutoModelForCausalLM, Trainer, TrainingArguments, AutoTokenizer
 import yaml
 import wandb
@@ -23,9 +24,25 @@ pad_token = config["pad_token"]
 number_processes = config["number_processes"]
 learning_rate = config["learning_rate"]
 
+lora_rank = 32
+lora_alpha = 64
+lora_dropout = 0.0
+
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name, attn_implementation="kernels-community/flash-attn3")
 
+lora_config = LoraConfig(
+    r=lora_rank,
+    lora_alpha=lora_alpha,
+    lora_dropout=lora_dropout,
+    target_modules=["q_proj", "k_proj", "v_proj",  "o_proj", "gate_proj", "down_proj", "up_proj"],
+    bias="none",
+    modules_to_save=["lm_head", "embed_tokens"], # Optional to train the embeddings and lm head
+    task_type="CAUSAL_LM",
+    use_rslora=True,
+)
+
+model = get_peft_model(model, lora_config)
 
 ds = load_dataset(dsn, split="train")
 
@@ -51,3 +68,8 @@ trainer = Trainer(
 )
 
 trainer.train()
+
+merged_model = model.merge_and_unload()
+
+merged_model.save_pretrained(f"./{base_repo_id}/merged")
+tokenizer.save_pretrained(f"./{base_repo_id}/merged")
