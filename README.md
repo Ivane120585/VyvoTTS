@@ -25,7 +25,7 @@
 
 This library was developed by the VyvoTTS team. A Text-to-Speech (TTS) training and inference framework built on top of the LFM2 model.
 
-## Features
+## ✨ Features
 
 - **Pre-training**: Train LFM2 models from scratch with custom datasets
 - **Fine-tuning**: Adapt pre-trained models for specific TTS tasks
@@ -33,19 +33,19 @@ This library was developed by the VyvoTTS team. A Text-to-Speech (TTS) training 
 - **Voice Cloning**: Clone voices using advanced neural techniques
 - **Multi-GPU Support**: Distributed training with accelerate
 
-## Installation
+## 📦 Installation
 
 ```bash
 uv venv --python 3.10
 uv pip install -r requirements.txt
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Training
 
 #### Fine-tuning
-**GPU Requirements:** 30GB VRAM minimum required for fine-tuning
+⚠️ GPU Requirements:** 30GB VRAM minimum required for fine-tuning
 
 Configure your fine-tuning parameters in `vyvotts/configs/lfm2_ft.yaml` and run:
 
@@ -53,7 +53,7 @@ Configure your fine-tuning parameters in `vyvotts/configs/lfm2_ft.yaml` and run:
 accelerate launch --config_file vyvotts/configs/accelerate_finetune.yaml vyvotts/train.py
 ```
 
-**For lower-end GPUs (6GB+):** Use the Unsloth FP8/FP4 training notebook:
+💻 For lower-end GPUs (6GB+):** Use the Unsloth FP8/FP4 training notebook:
 ```bash
 uv pip install jupyter notebook
 uv jupyter notebook notebook/vyvotts-lfm2-train.ipynb
@@ -72,20 +72,20 @@ accelerate launch --config_file vyvotts/configs/accelerate_pretrain.yaml vyvotts
 
 ```
 
-## Roadmap
+## 👨‍🍳 Roadmap
 
 - [ ] vLLM support
 - [ ] Transformers.js support
 - [ ] Pretrained model release
 - [X] Training and inference code release
 
-## Acknowledgements
+## 🙏 Acknowledgements
 
 We would like to thank the following projects and teams that made this work possible:
 
 - [Orpheus TTS](https://github.com/canopyai/orpheus-tts) - For foundational TTS research and implementation
 - [LiquidAI](https://huggingface.co/LiquidAI) - For the LFM2 model architecture and pre-trained weights
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
