@@ -3,7 +3,7 @@
     VyvoTTS: Advanced Text-to-Speech Training Framework 🚀
 </h2>
 <div>
-    <img width="200" alt="VyvoTTS Logo" src="assets/logo.png">
+    <img width="450" alt="VyvoTTS Logo" src="assets/logo.png">
 </div>
 
 <div>
@@ -16,6 +16,7 @@
     <a href="https://python.org" target="_blank">
         <img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="Python 3.8+">
     </a>
+    <a href="https://huggingface.co/spaces/Vyvo/VyvoTTS-LFM2"><img src="https://huggingface.co/datasets/huggingface/badges/raw/main/open-in-hf-spaces-sm.svg" alt="HuggingFace Spaces"></a>
 </div>
 </div>
 
