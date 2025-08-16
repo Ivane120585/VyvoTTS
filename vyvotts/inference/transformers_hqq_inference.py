@@ -2,6 +2,12 @@ from snac import SNAC
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from typing import List, Tuple, Optional, Dict
+import time
+
+from hqq.models.hf.base import AutoHQQHFModel
+from hqq.core.quantize import BaseQuantizeConfig
+from hqq.utils.patching import prepare_for_inference
+from hqq.utils.generation_hf import patch_model_for_compiled_runtime
 
 # Token ID constants
 TOKENIZER_LENGTH = 64400
@@ -24,19 +30,50 @@ END_OF_AI = TOKENIZER_LENGTH + 6        # 64406
 PAD_TOKEN = TOKENIZER_LENGTH + 7        # 64407
 AUDIO_TOKENS_START = TOKENIZER_LENGTH + 10  # 64410
 
+# Model configuration
+model_name = "Vyvo/VyvoTTS-LFM2-Neuvillette"
+device = "cuda:0"
+compute_dtype = torch.float16
 
-def initialize_models(model_name: str = "Vyvo/VyvoTTS-LFM2-Neuvillette", device: str = "cuda"):
-    """Initialize SNAC model, language model, and tokenizer."""
+def initialize_models():
+    """Initialize SNAC model, language model, and tokenizer with HQQ optimization."""
+    # Initialize SNAC model
     snac_model = SNAC.from_pretrained("hubertsiuzdak/snac_24khz")
     snac_model = snac_model.to(device)
 
+    # Initialize tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    # Initialize and optimize language model
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        torch_dtype=torch.bfloat16,
-        attn_implementation="kernels-community/flash-attn3:flash_attention",
-        device_map="auto",
+        torch_dtype=compute_dtype,
+        #attn_implementation="kernels-community/flash-attn3:flash_attention",
+        device_map=device,
+        #quantization_config=HqqConfig(nbits=4, group_size=64),
     )
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    model.config.use_cache = True
+    model.generation_config.cache_implementation = "static"
+
+    # Apply HQQ quantization
+    AutoHQQHFModel.quantize_model(
+        model,
+        quant_config=BaseQuantizeConfig(nbits=4, group_size=64, axis=1),
+        compute_dtype=compute_dtype,
+        device=device
+    )
+
+    # Prepare for optimized inference
+    prepare_for_inference(model, backend="gemlite")
+    patch_model_for_compiled_runtime(
+        model,
+        tokenizer,
+        warmup=False,
+        max_new_tokens=1000,
+        patch_accelerate=True,
+        pre_compile=None
+    )
 
     return snac_model, model, tokenizer
 
@@ -78,22 +115,28 @@ def preprocess_prompts(prompts: List[str], tokenizer, chosen_voice: Optional[str
     return input_ids, attention_mask
 
 def generate_text(model, input_ids: torch.Tensor, attention_mask: torch.Tensor,
-                 max_new_tokens: int = 1200, temperature: float = 0.6,
+                 do_sample: bool = True, max_new_tokens: int = 1200, temperature: float = 0.6,
                  top_p: float = 0.95, repetition_penalty: float = 1.1) -> Tuple[torch.Tensor, float]:
     """Generate text using the language model."""
+    torch.cuda.synchronize()
+    start_time = time.time()
 
     with torch.no_grad():
         generated_ids = model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
             max_new_tokens=max_new_tokens,
-            do_sample=True,
+            cache_implementation="static",
+            do_sample=do_sample,
             temperature=temperature,
             top_p=top_p,
             repetition_penalty=repetition_penalty,
             num_return_sequences=1,
             eos_token_id=END_OF_SPEECH,
         )
+
+    torch.cuda.synchronize()
+    generation_time = time.time() - start_time
 
     return generated_ids, generation_time
 
@@ -115,10 +158,9 @@ def redistribute_codes(code_list: List[int], snac_model) -> torch.Tensor:
              torch.tensor(layer_2).unsqueeze(0),
              torch.tensor(layer_3).unsqueeze(0)]
 
-    codes = [c.to("cuda") for c in codes]
+    codes = [c.to(device) for c in codes]
     audio_hat = snac_model.decode(codes)
     return audio_hat
-
 
 def parse_output_to_audio(generated_ids: torch.Tensor, snac_model) -> Tuple[List[torch.Tensor], float]:
     """Parse generated token IDs and convert to audio samples."""
@@ -159,7 +201,6 @@ def parse_output_to_audio(generated_ids: torch.Tensor, snac_model) -> Tuple[List
 
     return my_samples, audio_processing_time
 
-
 def process_single_prompt(prompt: str, snac_model, model, tokenizer, chosen_voice: Optional[str] = None) -> Tuple[torch.Tensor, Dict[str, float]]:
     """Process a single prompt and return audio with timing information."""
     torch.cuda.synchronize()
@@ -168,7 +209,7 @@ def process_single_prompt(prompt: str, snac_model, model, tokenizer, chosen_voic
     # Preprocessing
     torch.cuda.synchronize()
     preprocess_start = time.time()
-    input_ids, attention_mask = preprocess_prompts([prompt], tokenizer, chosen_voice)
+    input_ids, attention_mask = preprocess_prompts([prompt], tokenizer, chosen_voice, device)
     torch.cuda.synchronize()
     preprocess_time = time.time() - preprocess_start
 
@@ -190,21 +231,16 @@ def process_single_prompt(prompt: str, snac_model, model, tokenizer, chosen_voic
 
     return audio_samples[0] if audio_samples else None, timing_info
 
-def main():
-    prompts = [
-        "Hello",
-        "Hello",
-    ]
-
-    chosen_voice = None
+def text_to_speech(text: str, voice: Optional[str] = None) -> torch.Tensor:
+    """Generate speech from text using HQQ-optimized model.
+    
+    Args:
+        text: Input text to convert to speech
+        voice: Optional voice identifier
+        
+    Returns:
+        Audio tensor containing the generated speech
+    """
     snac_model, model, tokenizer = initialize_models()
-    audio_samples = []
-    for i, prompt in enumerate(prompts, 1):
-        audio_sample, timing = process_single_prompt(prompt, snac_model, model, tokenizer, chosen_voice)
-        audio_samples.append(audio_sample)
-
-    return audio_samples
-
-
-
-main()
+    audio_sample, _ = process_single_prompt(text, snac_model, model, tokenizer, voice)
+    return audio_sample
