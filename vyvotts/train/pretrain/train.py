@@ -11,10 +11,12 @@ import wandb
 from huggingface_hub import HfApi
 from accelerate import Accelerator
 from liger_kernel.transformers import AutoLigerKernelForCausalLM
+from pathlib import Path
 
-config_file = "vyvotts/configs/lfm2_config.yaml"
+# Get config file path relative to this script
+CONFIG_FILE = Path(__file__).parent.parent.parent / "configs" / "lfm2_config.yaml"
 
-with open(config_file, "r") as file:
+with open(CONFIG_FILE, "r") as file:
     config = yaml.safe_load(file)
 
 dsn1 = config["text_QA_dataset"]
