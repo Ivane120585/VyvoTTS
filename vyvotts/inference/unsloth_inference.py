@@ -48,7 +48,7 @@ class VyvoTTSUnslothInference:
             self.config = load_config(config_path)
         else:
             # Default config path
-            default_config_path = "/Users/kadirnar/projects/github/VyvoTTS/vyvotts/configs/inference/lfm2.yaml"
+            default_config_path = "vyvotts/configs/inference/lfm2.yaml"
             self.config = load_config(default_config_path)
         
         # Set token constants from config

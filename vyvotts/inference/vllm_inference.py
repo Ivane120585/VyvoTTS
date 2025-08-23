@@ -1,51 +1,64 @@
-from typing import List
+from typing import List, Dict, Any, Optional
 import torch
+import yaml
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
 from snac import SNAC
 
 
+def load_config(config_path: str) -> Dict[str, Any]:
+    """Load configuration from YAML file."""
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
+
 class VyvoTTSInference:
     """High-performance TTS inference engine using vLLM backend."""
 
-    # Token ID constants
-    TOKENIZER_LENGTH = 64400
-    
-    # Basic tokens
-    START_OF_TEXT = 1
-    END_OF_TEXT = 7
-    
-    # Speech tokens
-    START_OF_SPEECH = TOKENIZER_LENGTH + 1  # 64401
-    END_OF_SPEECH = TOKENIZER_LENGTH + 2    # 64402
-    
-    # Human/AI conversation tokens
-    START_OF_HUMAN = TOKENIZER_LENGTH + 3   # 64403
-    END_OF_HUMAN = TOKENIZER_LENGTH + 4     # 64404
-    START_OF_AI = TOKENIZER_LENGTH + 5      # 64405
-    END_OF_AI = TOKENIZER_LENGTH + 6        # 64406
-    
-    # Special tokens
-    PAD_TOKEN = TOKENIZER_LENGTH + 7        # 64407
-    AUDIO_TOKENS_START = TOKENIZER_LENGTH + 10  # 64410
-    
-    # For compatibility with existing code
-    AUDIO_MARKER_TOKEN = AUDIO_TOKENS_START
-    STOP_TOKEN_ID = END_OF_SPEECH
-    AUDIO_OFFSET = AUDIO_TOKENS_START
     CODES_PER_GROUP = 7
 
     def __init__(
         self,
+        config: Optional[Dict[str, Any]] = None,
+        config_path: Optional[str] = None,
         model_name: str = "Vyvo/VyvoTTS-LFM2-Neuvillette",
         snac_model_name: str = "hubertsiuzdak/snac_24khz"
     ):
         """Initialize the TTS inference engine.
 
         Args:
+            config: Configuration dictionary containing token constants
+            config_path: Path to YAML config file (alternative to config dict)
             model_name: HuggingFace model identifier for the TTS model
             snac_model_name: HuggingFace model identifier for SNAC audio decoder
         """
+        # Load configuration
+        if config is not None:
+            self.config = config
+        elif config_path is not None:
+            self.config = load_config(config_path)
+        else:
+            # Default config path
+            self.config = load_config("vyvotts/configs/inference/lfm2.yaml")
+        
+        # Set token constants from config
+        self.TOKENIZER_LENGTH = self.config['TOKENIZER_LENGTH']
+        self.START_OF_TEXT = self.config['START_OF_TEXT']
+        self.END_OF_TEXT = self.config['END_OF_TEXT']
+        self.START_OF_SPEECH = self.config['START_OF_SPEECH']
+        self.END_OF_SPEECH = self.config['END_OF_SPEECH']
+        self.START_OF_HUMAN = self.config['START_OF_HUMAN']
+        self.END_OF_HUMAN = self.config['END_OF_HUMAN']
+        self.START_OF_AI = self.config['START_OF_AI']
+        self.END_OF_AI = self.config['END_OF_AI']
+        self.PAD_TOKEN = self.config['PAD_TOKEN']
+        self.AUDIO_TOKENS_START = self.config['AUDIO_TOKENS_START']
+        
+        # For compatibility with existing code
+        self.AUDIO_MARKER_TOKEN = self.AUDIO_TOKENS_START
+        self.STOP_TOKEN_ID = self.END_OF_SPEECH
+        self.AUDIO_OFFSET = self.AUDIO_TOKENS_START
         self.model_name = model_name
         self.engine = LLM(model=model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
