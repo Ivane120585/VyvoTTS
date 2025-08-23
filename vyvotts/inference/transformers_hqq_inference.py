@@ -10,14 +10,14 @@ from hqq.core.quantize import BaseQuantizeConfig
 from hqq.utils.patching import prepare_for_inference
 from hqq.utils.generation_hf import patch_model_for_compiled_runtime
 
-def load_config(config_path: str = "/Users/kadirnar/projects/github/VyvoTTS/vyvotts/configs/inference/lfm2.yaml") -> Dict[str, Any]:
+def load_config(config_path: str) -> Dict[str, Any]:
     """Load configuration from YAML file."""
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
     return config
 
 # Load configuration
-config = load_config()
+config = load_config("vyvotts/configs/inference/lfm2.yaml")
 TOKENIZER_LENGTH = config['TOKENIZER_LENGTH']
 START_OF_TEXT = config['START_OF_TEXT']
 END_OF_TEXT = config['END_OF_TEXT']
