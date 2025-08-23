@@ -22,6 +22,6 @@
       "fsdp_offload_params": false,
       "fsdp_sharding_strategy": 1,
       "fsdp_state_dict_type": "FULL_STATE_DICT",
-      "fsdp_transformer_layer_cls_to_wrap": ["Lfm2DecoderLayer"], # SmolLM3DecoderLayer, LlamaDecoderLayer, Lfm2DecoderLayer
+      "fsdp_transformer_layer_cls_to_wrap": ["Lfm2DecoderLayer"], # SmolLM3DecoderLayer, LlamaDecoderLayer,Qwen3DecoderLayer
     },
 }

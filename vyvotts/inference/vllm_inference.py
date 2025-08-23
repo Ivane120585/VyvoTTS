@@ -126,46 +126,63 @@ class VyvoTTSInference:
         # Decode to audio
         return [self._redistribute_codes(code_list) for code_list in code_lists]
 
-def text_to_speech(prompt, voice=None):
+    def generate(self, text: str, voice: Optional[str] = None) -> torch.Tensor:
+        """Generate speech from text input.
+        
+        Args:
+            text: Input text to convert to speech
+            voice: Optional voice identifier
+            
+        Returns:
+            Audio tensor containing the generated speech
+        """
+        # Construct the prompt with optional voice prefix
+        if voice:
+            adapted_prompt = f"{voice}: {text}"
+            prompt_tokens = self.tokenizer(adapted_prompt, return_tensors="pt")
+        else:
+            prompt_tokens = self.tokenizer(text, return_tensors="pt")
+
+        # Insert special tokens
+        start_token = torch.tensor([[self.START_OF_HUMAN]], dtype=torch.int64)
+        end_tokens = torch.tensor([[self.END_OF_TEXT, self.END_OF_HUMAN]], dtype=torch.int64)
+        all_input_ids = torch.cat([start_token, prompt_tokens.input_ids, end_tokens], dim=1)
+
+        # Decode to string for LLM
+        final_prompt = self.tokenizer.decode(all_input_ids[0])
+
+        # Sampling parameters
+        params = SamplingParams(
+            temperature=0.6,
+            top_p=0.8,
+            max_tokens=1200,
+            stop_token_ids=[self.STOP_TOKEN_ID],
+            repetition_penalty=1.3
+        )
+
+        # Generate token IDs from the model
+        outputs = self.engine.generate([final_prompt], [params])
+        token_ids = outputs[0].outputs[0].token_ids
+        generated_ids = torch.tensor([token_ids], dtype=torch.long)
+
+        # Convert generated tokens into audio
+        audio_samples = self.parse_tokens_to_audio(generated_ids)
+        return audio_samples[0] if audio_samples else None
+
+def text_to_speech(prompt, voice=None, config_path=None):
     """
     Given a text prompt and optional voice, generates audio tokens using
-    the Orpheus TTS model and decodes them into audio samples via SNAC.
+    the Vyvo TTS model and decodes them into audio samples via SNAC.
     """
-
-    # Construct the prompt with optional voice prefix
-    if voice:
-        adapted_prompt = f"{voice}: {prompt}"
-        prompt_tokens = tokenizer(adapted_prompt, return_tensors="pt")
-    else:
-        prompt_tokens = tokenizer(prompt, return_tensors="pt")
-
-    # Insert special tokens
-    start_token = torch.tensor([[START_TOKEN_ID]], dtype=torch.int64)
-    end_tokens = torch.tensor([END_TOKEN_IDS], dtype=torch.int64)
-    all_input_ids = torch.cat([start_token, prompt_tokens.input_ids, end_tokens], dim=1)
-
-    # Decode to string for LLM
-    final_prompt = tokenizer.decode(all_input_ids[0])
-
-    # Sampling parameters
-    params = SamplingParams(
-        temperature=0.6,
-        top_p=0.8,
-        max_tokens=1200,
-        stop_token_ids=[STOP_TOKEN_ID],
-        repetition_penalty=1.3
-    )
-
-    # Generate token IDs from the model
-    outputs = engine.generate([final_prompt], [params])
-    token_ids = outputs[0].outputs[0].token_ids
-    generated_ids = torch.tensor([token_ids], dtype=torch.long)
-
-    # Convert generated tokens into audio
-    audio_samples = parse_tokens_to_audio(generated_ids, snac_model)
+    # Initialize TTS engine
+    engine = VyvoTTSInference(config_path=config_path)
+    
+    # Generate audio
+    audio_samples = engine.generate(prompt, voice)
     return audio_samples
 
 
-    # Example usage
-audio_output = text_to_speech("Hello world", voice="zoe")
-print("Decoded audio (tensors):", audio_output)
+# Example usage
+if __name__ == "__main__":
+    audio_output = text_to_speech("Hello world", voice="zoe")
+    print("Decoded audio (tensors):", audio_output)

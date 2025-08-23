@@ -12,8 +12,8 @@ learning_rate: 5.0e-5
 ratio: "2:1"
 
 # Datasets
-text_QA_dataset: "OpenSpeechHub/Emilia-EN-LFM2"
-TTS_dataset: "OpenSpeechHub/Emilia-EN-LFM2"
+text_QA_dataset: "Vyvo/Emilia-EN-LFM2"
+TTS_dataset: "Vyvo/Emilia-EN-LFM2"
 
 # Naming and paths
 save_folder: "checkpoints"
