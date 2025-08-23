@@ -1,40 +1,29 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import torch
 import soundfile as sf
+import yaml
 from pathlib import Path
 from unsloth import FastLanguageModel
 from snac import SNAC
 
 
+def load_config(config_path: str) -> Dict[str, Any]:
+    """Load configuration from YAML file."""
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
+
 class VyvoTTSUnslothInference:
     """Memory-efficient TTS inference engine using Unsloth backend."""
-
-    # Token ID constants
-    TOKENIZER_LENGTH = 64400
-
-    # Basic tokens
-    START_OF_TEXT = 1
-    END_OF_TEXT = 7
-
-    # Speech tokens
-    START_OF_SPEECH = TOKENIZER_LENGTH + 1  # 64401
-    END_OF_SPEECH = TOKENIZER_LENGTH + 2    # 64402
-
-    # Human/AI conversation tokens
-    START_OF_HUMAN = TOKENIZER_LENGTH + 3   # 64403
-    END_OF_HUMAN = TOKENIZER_LENGTH + 4     # 64404
-    START_OF_AI = TOKENIZER_LENGTH + 5      # 64405
-    END_OF_AI = TOKENIZER_LENGTH + 6        # 64406
-
-    # Special tokens
-    PAD_TOKEN = TOKENIZER_LENGTH + 7        # 64407
-    AUDIO_TOKENS_START = TOKENIZER_LENGTH + 10  # 64410
 
     CODES_PER_GROUP = 7
     SAMPLE_RATE = 24000
 
     def __init__(
         self,
+        config: Optional[Dict[str, Any]] = None,
+        config_path: Optional[str] = None,
         model_name: str = "Vyvo/VyvoTTS-v2-Neuvillette",
         snac_model_name: str = "hubertsiuzdak/snac_24khz",
         max_seq_length: int = 8192,
@@ -44,12 +33,36 @@ class VyvoTTSUnslothInference:
         """Initialize the TTS inference engine.
 
         Args:
+            config: Configuration dictionary containing token constants
+            config_path: Path to YAML config file (alternative to config dict)
             model_name: HuggingFace model identifier for the TTS model
             snac_model_name: HuggingFace model identifier for SNAC audio decoder
             max_seq_length: Maximum sequence length for the model
             load_in_4bit: Whether to load model in 4-bit precision
             load_in_8bit: Whether to load model in 8-bit precision
         """
+        # Load configuration
+        if config is not None:
+            self.config = config
+        elif config_path is not None:
+            self.config = load_config(config_path)
+        else:
+            # Default config path
+            default_config_path = "/Users/kadirnar/projects/github/VyvoTTS/vyvotts/configs/inference/lfm2.yaml"
+            self.config = load_config(default_config_path)
+        
+        # Set token constants from config
+        self.TOKENIZER_LENGTH = self.config['TOKENIZER_LENGTH']
+        self.START_OF_TEXT = self.config['START_OF_TEXT']
+        self.END_OF_TEXT = self.config['END_OF_TEXT']
+        self.START_OF_SPEECH = self.config['START_OF_SPEECH']
+        self.END_OF_SPEECH = self.config['END_OF_SPEECH']
+        self.START_OF_HUMAN = self.config['START_OF_HUMAN']
+        self.END_OF_HUMAN = self.config['END_OF_HUMAN']
+        self.START_OF_AI = self.config['START_OF_AI']
+        self.END_OF_AI = self.config['END_OF_AI']
+        self.PAD_TOKEN = self.config['PAD_TOKEN']
+        self.AUDIO_TOKENS_START = self.config['AUDIO_TOKENS_START']
         self.model, self.tokenizer = FastLanguageModel.from_pretrained(
             model_name=model_name,
             max_seq_length=max_seq_length,

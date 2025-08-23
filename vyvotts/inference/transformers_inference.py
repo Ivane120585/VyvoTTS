@@ -1,28 +1,28 @@
 from snac import SNAC
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, Any
+import yaml
 
-# Token ID constants
-TOKENIZER_LENGTH = 64400
+def load_config(config_path: str = "/Users/kadirnar/projects/github/VyvoTTS/vyvotts/configs/inference/lfm2.yaml") -> Dict[str, Any]:
+    """Load configuration from YAML file."""
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
 
-# Basic tokens
-START_OF_TEXT = 1
-END_OF_TEXT = 7
-
-# Speech tokens
-START_OF_SPEECH = TOKENIZER_LENGTH + 1  # 64401
-END_OF_SPEECH = TOKENIZER_LENGTH + 2    # 64402
-
-# Human/AI conversation tokens
-START_OF_HUMAN = TOKENIZER_LENGTH + 3   # 64403
-END_OF_HUMAN = TOKENIZER_LENGTH + 4     # 64404
-START_OF_AI = TOKENIZER_LENGTH + 5      # 64405
-END_OF_AI = TOKENIZER_LENGTH + 6        # 64406
-
-# Special tokens
-PAD_TOKEN = TOKENIZER_LENGTH + 7        # 64407
-AUDIO_TOKENS_START = TOKENIZER_LENGTH + 10  # 64410
+# Load configuration
+config = load_config()
+TOKENIZER_LENGTH = config['TOKENIZER_LENGTH']
+START_OF_TEXT = config['START_OF_TEXT']
+END_OF_TEXT = config['END_OF_TEXT']
+START_OF_SPEECH = config['START_OF_SPEECH']
+END_OF_SPEECH = config['END_OF_SPEECH']
+START_OF_HUMAN = config['START_OF_HUMAN']
+END_OF_HUMAN = config['END_OF_HUMAN']
+START_OF_AI = config['START_OF_AI']
+END_OF_AI = config['END_OF_AI']
+PAD_TOKEN = config['PAD_TOKEN']
+AUDIO_TOKENS_START = config['AUDIO_TOKENS_START']
 
 
 def initialize_models(model_name: str = "Vyvo/VyvoTTS-LFM2-Neuvillette", device: str = "cuda"):
