@@ -85,9 +85,9 @@ audio = hqq_tts("Hello world", voice="zoe")
 
 ## 👨‍🍳 Roadmap
 
-- [ ] vLLM support
 - [ ] Transformers.js support
-- [ ] Pretrained model release
+- [X] vLLM support
+- [X] Pretrained model release
 - [X] Training and inference code release
 
 ## 🙏 Acknowledgements
