@@ -23,11 +23,11 @@
 </div>
 </div>
 
-This library was developed by the VyvoTTS team. A Text-to-Speech (TTS) training and inference framework built on top of the LFM2 model.
+This library was developed by the VyvoTTS team. A Text-to-Speech (TTS) training and inference framework built on top of the LLM model.
 
 ## ✨ Features
 
-- **Pre-training**: Train LFM2 models from scratch with custom datasets
+- **Pre-training**: Train LLM models from scratch with custom datasets
 - **Fine-tuning**: Adapt pre-trained models for specific TTS tasks
 - **LoRA Adaptation**: Memory-efficient fine-tuning using Low-Rank Adaptation
 - **Voice Cloning**: Clone voices using advanced neural techniques
