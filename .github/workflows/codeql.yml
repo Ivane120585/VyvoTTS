@@ -1,0 +1,25 @@
+
+import os
+import torch
+import numpy as np
+import librosa
+
+class EchoWaveLoader(torch.utils.data.Dataset):
+    def __init__(self, audio_dir, sample_rate=22050):
+        self.audio_dir = audio_dir
+        self.sample_rate = sample_rate
+        self.audio_files = [f for f in os.listdir(audio_dir) if f.endswith('.wav')]
+
+    def __len__(self):
+        return len(self.audio_files)
+
+    def __getitem__(self, idx):
+        file_path = os.path.join(self.audio_dir, self.audio_files[idx])
+        waveform, _ = librosa.load(file_path, sr=self.sample_rate)
+        waveform_tensor = torch.FloatTensor(waveform)
+        return waveform_tensor
+
+def echo_print_capsule(loader):
+    for i in range(len(loader)):
+        wave = loader[i]
+        print(f"🔊 Capsule {i+1}: Shape = {wave.shape}, Max = {wave.max():.4f}")
