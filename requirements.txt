@@ -1,6 +1,6 @@
 transformers 
 unsloth
-datasets==3.4.1
+datasets==5.0.1
 wandb 
 trl
 accelerate
